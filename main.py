@@ -26,9 +26,11 @@ root_url = "https://www.congress.gov/"
 
 
 def req():
+    driver_executable_path = ROOT_PATH + '\\exe_foder\\chromedriver.exe'
+    # driver_executable_path = 'F:\\Files\\spiders\\U.S.CongressSpider\\exe_folder\\chromedriver.exe'
     browser = uc.Chrome(
         version_main=95,
-        driver_executable_path=ROOT_PATH + '\\exe_foder\\chromedriver.exe',
+        driver_executable_path=driver_executable_path,
         # browser_executable_path='C:\Program Files\Google\Chrome\Application\chrome.exe'
     )
     browser.get(root_url)
