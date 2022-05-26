@@ -24,18 +24,23 @@ headers = {
 
 root_url = "https://www.congress.gov/"
 
+url = "https://www.congress.gov/search?q=%7B%22congress%22%3A%5B%22117%22%5D%2C%22source%22%3A%22all%22%2C%22search%22%3A%22health%20care%22%7D"
 
 def req():
-    driver_executable_path = ROOT_PATH + '\\exe_foder\\chromedriver.exe'
+    driver_executable_path = utils.get_project_path() + '\\exe_folder\\chromedriver.exe'
     # driver_executable_path = 'F:\\Files\\spiders\\U.S.CongressSpider\\exe_folder\\chromedriver.exe'
     browser = uc.Chrome(
         version_main=95,
         driver_executable_path=driver_executable_path,
         # browser_executable_path='C:\Program Files\Google\Chrome\Application\chrome.exe'
     )
-    browser.get(root_url)
-    delay = 6
+    browser.get(url)
+    delay = 8
     time.sleep(delay)
+    res = browser.find_element_by_xpath("//div[@id='main']/ol/li[@class='expanded']//span[@class='result-heading']/a")
+    res.click()
+    time.sleep(delay)
+    print(res)
     text = browser.page_source
     html = etree.HTML(text)
     print(html)

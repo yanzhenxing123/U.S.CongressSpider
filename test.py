@@ -20,14 +20,15 @@ def main():
     # 总的大框框
     main_element = html.xpath("//div[@id='main']")[0]
     item_elements = main_element.xpath("./ol/li[@class='expanded']")
-
+    #
     # for item_element in item_elements:
     #     try:
     #         get_item(item_element)
     #     except Exception:
     #         pass
 
-    get_item(item_elements[12])
+    get_item(item_elements[53])
+    # get_item(item_elements[1])
 
 
 
@@ -41,8 +42,9 @@ def get_item(item_element):
     heading_text = item_element.xpath(".//span[@class='result-heading']//text()")
     heading = "".join(heading_text)
     # 法案的bill_url, 详细信息
-    bill_url = item_element.xpath(".//span[@class='result-heading']/a/@href")[0]
-    bill_url = utils.format_url(bill_url)
+    bill_url = item_element.xpath(".//span[@class='result-heading']/a/@href")
+    print(bill_url)
+    # bill_url = utils.format_url(bill_url)
     # 法案的title, eg: Health Care Worker and First Responder Social Security Beneficiary Choice Act of 2022
     title_text = item_element.xpath(".//span[@class='result-title']//text()")
     title = "".join(title_text)
