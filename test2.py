@@ -9,6 +9,7 @@ def main():
     print(res)
     res_piece = res.split("&")
     for piece in res_piece:
+
         print(piece)
 
 if __name__ == '__main__':
