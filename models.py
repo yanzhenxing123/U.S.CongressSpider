@@ -11,20 +11,23 @@ class URLModel(BaseModel):
     """
     URL模型类
     """
+
     congressGroup: List[int] = Field(None, description="{1973-2022, 1951-1972, 1799-1811, 1813-1873}, [1, 2, 3]")
     congress: List[int] = Field(None, description="国会")
     legislationNumbers: str = Field(None, description="eg: hr5")
-    restrictionType = 'field'
-    restrictionFields: List[str] = ['allBillTitles', 'summary']
-    summaryField: str = 'billSummary'
-    enterTerms: str = None
-    legislationTypes: List[str] = None
-    public: bool = True
-    private: bool = True
-    sponsorTypes: List[str] = ['sponsor']
-    committeeActivity: List[int] = None
-    satellite: List = Field(None, alias='satellite[]')
-    submitted: str = 'Submitted'
+    restrictionType: str = Field('field', description="restrictionType")
+    restrictionFields: List[str] = Field(['allBillTitles', 'summary'], description="restrictionType")
+    summaryField: str = Field('billSummary')
+    enterTerms: str = Field(None)
+    legislationTypes: List[str] = Field(None)
+    public: bool = Field(True)
+    private: bool = Field(True)
+    sponsorTypes: List[str] = Field(['sponsor'])
+    committeeActivity: List[int] = Field(None)
+    satellite: List = Field(None, alias='satellite')
+    submitted: str = Field('Submitted')
+    member: str = Field(None, description='提出人')
+    actionTerms: int = Field(None, description='法案所处的阶段 eg: 8000')
 
 
 class URL:
@@ -44,7 +47,7 @@ class URL:
         url_dict = self.url_model.dict()
         for key in url_dict.keys():
             value = url_dict.get(key)
-            if value is None:
+            if not value:
                 continue
             elif isinstance(value, List):
                 key = key + "[]"
@@ -58,9 +61,14 @@ class URL:
 
 
 if __name__ == '__main__':
-    congress_group = 1
     data = {
         'congress_group': 1,
+        'congress': None,
+        'member': None,
+        'legislationNumbers': None,
+        'enterTerms': 'health care',
+        'actionTerms': 8000,
+        'satellite': None,
     }
     url_model = URLModel(**data)
     res = URL(url_model).get_url()

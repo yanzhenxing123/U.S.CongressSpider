@@ -3,6 +3,7 @@
 @Date: 2022/5/18 23:03
 @Description: main函数
 """
+import re
 import sys
 import requests
 import os
@@ -11,6 +12,7 @@ from lxml import etree
 import undetected_chromedriver as uc
 
 import utils
+from models import URLModel, URL
 
 ROOT_PATH = utils.get_project_path()
 
@@ -26,28 +28,128 @@ root_url = "https://www.congress.gov/"
 
 url = "https://www.congress.gov/search?q=%7B%22congress%22%3A%5B%22117%22%5D%2C%22source%22%3A%22all%22%2C%22search%22%3A%22health%20care%22%7D"
 
-def req():
+
+def req(url: str):
+    """
+    发送请求
+    :return:
+    """
     driver_executable_path = utils.get_project_path() + '\\exe_folder\\chromedriver.exe'
     # driver_executable_path = 'F:\\Files\\spiders\\U.S.CongressSpider\\exe_folder\\chromedriver.exe'
     browser = uc.Chrome(
         version_main=95,
         driver_executable_path=driver_executable_path,
-        # browser_executable_path='C:\Program Files\Google\Chrome\Application\chrome.exe'
+        browser_executable_path='C:\Program Files\Google\Chrome\Application\chrome.exe'
     )
     browser.get(url)
     delay = 8
     time.sleep(delay)
-    res = browser.find_element_by_xpath("//div[@id='main']/ol/li[@class='expanded']//span[@class='result-heading']/a")
-    res.click()
-    time.sleep(delay)
-    print(res)
+    # 法案点进去
+    # res = browser.find_element_by_xpath("//div[@id='main']/ol/li[@class='expanded']//span[@class='result-heading']/a")
+    # res.click()
+    # time.sleep(delay)
     text = browser.page_source
     html = etree.HTML(text)
-    print(html)
+    return html
+
+
+def parse_all(html):
+    """
+    解析整个页面的html
+    :param html:
+    :return:
+    """
+    main_element = html.xpath("//div[@id='main']")[0]
+    item_elements = main_element.xpath("./ol/li[@class='expanded']")
+    #
+    for item_element in item_elements:
+        try:
+            parse_item(item_element)
+        except Exception as e:
+            print(e)
+            pass
+
+    # parse_item(item_elements[53])
+
+
+def parse_item(item_element):
+    """
+    解析一个item
+    :param item_element: 
+    :return: 
+    """
+    # 单个法案信息
+    item = {}
+    # 法案的id, 搜索后排序的id
+    bill_id = "".join(item_element.xpath("./text()"))
+    bill_id = re.findall(r'\d+', bill_id)[0]
+    # 法案的heading, eg:  H.R.6776 — 117th Congress (2021-2022)
+    heading_text = item_element.xpath(".//span[@class='result-heading']//text()")
+    heading = "".join(heading_text)
+    # 法案的bill_url, 详细信息
+    bill_url = item_element.xpath(".//span[@class='result-heading']/a/@href")
+    bill_url = utils.format_url(bill_url[0]) if bill_url else ''
+    # 法案的title, eg: Health Care Worker and First Responder Social Security Beneficiary Choice Act of 2022
+    title_text = item_element.xpath(".//span[@class='result-title']//text()")
+    title = "".join(title_text)
+    # 法案的类型 eg: BILL、RESOLUTION、...
+    type = item_element.xpath(".//span[@class='visualIndicator']/text()")[0]
+    # 法案的进程
+    tracker = item_element.xpath(".//span[@class='result-item result-tracker']//li[@class='selected']/text()")
+    tracker = \
+    item_element.xpath(".//span[@class='result-item result-tracker']//li[@class='selected mediumTrack last']/text()")[
+        0] if not tracker else tracker[0]
+    item['bill_id'] = bill_id
+    item['type'] = type
+    item['tracker'] = tracker
+    item['heading'] = heading
+    item['bill_url'] = bill_url
+    item['title'] = title
+
+    # Sponsor Committees Latest_Action
+    result_item_elements = item_element.xpath(".//span[@class='result-item']")
+    for result_item_element in result_item_elements:
+        keys = result_item_element.xpath("./strong/text()")
+        values = result_item_element.xpath(".//text()")
+        for key in keys:
+            index = values.index(key) + 1
+            if key == 'Sponsor:':
+                index_Cosponsors = values.index('Cosponsors:')
+                value = "".join(values[index: index_Cosponsors])
+                Sponsor_url = result_item_element.xpath('./a[1]/@href')[0]
+                Sponsor_url = utils.format_url(Sponsor_url)
+                item['Sponsor_url'] = Sponsor_url
+            else:
+                value = "".join(values[index:])
+                # 如果是贡献者，那么将其余部分去掉
+                if key == 'Cosponsors:':
+                    try:
+                        value = re.findall(r'\d+', value)[0]
+                    except Exception:
+                        value = 0
+            item[key[:-1]] = value
+    utils.print_dict(item)
+    return item
 
 
 def main():
-    req()
+    data = {
+        'congress_group': 1,
+        'congress': None,
+        'member': None,
+        'legislationNumbers': None,
+        'enterTerms': 'health care',
+        'actionTerms': 8000,
+        'satellite': None,
+    }
+    url_model = URLModel(**data)
+    url = URL(url_model).get_url()
+    with open("./health_care_demo.txt") as f:
+        text = f.read()
+        html = etree.HTML(text)
+    print(url)
+    # html = req(url)
+    parse_all(html)
 
 
 if __name__ == '__main__':
