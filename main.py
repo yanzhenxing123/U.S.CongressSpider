@@ -7,12 +7,13 @@ import re
 import sys
 import requests
 import os
+from typing import List, Dict
+import utils
 import time
 from lxml import etree
 import undetected_chromedriver as uc
-
-import utils
-from models import URLModel, URL
+from models import URLModel, URL, Bill
+from loguru import logger
 
 ROOT_PATH = utils.get_project_path()
 
@@ -42,7 +43,7 @@ def req(url: str):
         browser_executable_path='C:\Program Files\Google\Chrome\Application\chrome.exe'
     )
     browser.get(url)
-    delay = 8
+    delay = 10
     time.sleep(delay)
     # 法案点进去
     # res = browser.find_element_by_xpath("//div[@id='main']/ol/li[@class='expanded']//span[@class='result-heading']/a")
@@ -59,17 +60,23 @@ def parse_all(html):
     :param html:
     :return:
     """
+    res = []
     main_element = html.xpath("//div[@id='main']")[0]
     item_elements = main_element.xpath("./ol/li[@class='expanded']")
     #
     for item_element in item_elements:
-        try:
-            parse_item(item_element)
-        except Exception as e:
-            print(e)
-            pass
+        # try:
+            # 解析
+            item = parse_item(item_element)
+            res.append(item)
 
-    # parse_item(item_elements[53])
+            # 插入数据库
+            bill = Bill(**item)
+            bill.insert()
+        # except Exception as e:
+        #     logger.error(e)
+            pass
+    return res
 
 
 def parse_item(item_element):
@@ -95,10 +102,7 @@ def parse_item(item_element):
     # 法案的类型 eg: BILL、RESOLUTION、...
     type = item_element.xpath(".//span[@class='visualIndicator']/text()")[0]
     # 法案的进程
-    tracker = item_element.xpath(".//span[@class='result-item result-tracker']//li[@class='selected']/text()")
-    tracker = \
-    item_element.xpath(".//span[@class='result-item result-tracker']//li[@class='selected mediumTrack last']/text()")[
-        0] if not tracker else tracker[0]
+    tracker = utils.match_tracker(item_element)
     item['bill_id'] = bill_id
     item['type'] = type
     item['tracker'] = tracker
@@ -128,11 +132,15 @@ def parse_item(item_element):
                     except Exception:
                         value = 0
             item[key[:-1]] = value
-    utils.print_dict(item)
+    # utils.print_dict(item)
     return item
 
 
 def main():
+    """
+    main函数
+    :return:
+    """
     data = {
         'congress_group': 1,
         'congress': None,
@@ -148,8 +156,8 @@ def main():
         text = f.read()
         html = etree.HTML(text)
     print(url)
-    # html = req(url)
-    parse_all(html)
+    html  = req(url)
+    items = parse_all(html)
 
 
 if __name__ == '__main__':

@@ -5,6 +5,9 @@
 """
 from pydantic import BaseModel, Field
 from typing import List, Dict
+import db
+
+conn = db.MysqlConn.get_conn()
 
 
 class URLModel(BaseModel):
@@ -34,6 +37,7 @@ class URL:
     """
     Advance Search URL拼接类
     """
+
     def __init__(self, url_model: URLModel):
         self.url_model = url_model
         self.base_url = "https://www.congress.gov/advanced-search/legislation?"
@@ -58,6 +62,30 @@ class URL:
         res_str = "&".join(res_li)
         return self.base_url + res_str
 
+
+class Bill(BaseModel):
+    bill_id: int = Field(None, description='')
+    type: str = Field(None, description='')
+    tracker: str = Field(None, description='')
+    heading: str = Field(None, description='')
+    bill_url: str = Field(None, description='')
+    title: str = Field(None, description='')
+    sponsor: str = Field(None, description='', alias='Sponsor')
+    sponsor_url: str = Field(None, description='', alias='Sponsor_url')
+    cosponsors: int = Field(None, description='', alias='Cosponsors')
+    latest_action: str = Field(None, description='', alias='Latest Action')
+
+    def insert(self, table: str = 'bill'):
+        data = self.dict()
+        data.pop('bill_id')
+        keys = ','.join(data.keys())
+        values = ','.join(['%s'] * len(data))
+        sql = 'INSERT INTO ' \
+              '{table} ({keys}) ' \
+              'VALUES({values})'.format(table=table, keys=keys, values=values)
+        cursor = conn.cursor()
+        if cursor.execute(sql, tuple(data.values())):
+            conn.commit()
 
 
 if __name__ == '__main__':
