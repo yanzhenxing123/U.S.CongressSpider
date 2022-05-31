@@ -1,7 +1,7 @@
 import random
 
 import pymongo
-import config
+from config import config
 from typing import List
 from confluent_kafka import Consumer as KafkaConsumer
 import pymysql

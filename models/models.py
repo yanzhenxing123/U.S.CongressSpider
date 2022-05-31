@@ -4,8 +4,8 @@
 @Description: 
 """
 from pydantic import BaseModel, Field
-from typing import List, Dict
-import db
+from typing import List
+from config import db
 
 conn = db.MysqlConn.get_conn()
 

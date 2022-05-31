@@ -4,16 +4,11 @@
 @Description: main函数
 """
 import re
-import sys
-import requests
-import os
-from typing import List, Dict
 import utils
 import time
 from lxml import etree
 import undetected_chromedriver as uc
-from models import URLModel, URL, Bill
-from loguru import logger
+from models.models import URLModel, URL, Bill
 
 ROOT_PATH = utils.get_project_path()
 
@@ -35,7 +30,7 @@ def req(url: str):
     发送请求
     :return:
     """
-    driver_executable_path = utils.get_project_path() + '\\exe_folder\\chromedriver.exe'
+    driver_executable_path = utils.get_project_path() + '\\config\\chromedriver.exe'
     # driver_executable_path = 'F:\\Files\\spiders\\U.S.CongressSpider\\exe_folder\\chromedriver.exe'
     browser = uc.Chrome(
         version_main=95,
@@ -156,7 +151,7 @@ def main():
         text = f.read()
         html = etree.HTML(text)
     print(url)
-    html  = req(url)
+    html = req(url)
     items = parse_all(html)
 
 

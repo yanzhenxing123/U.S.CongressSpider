@@ -66,15 +66,17 @@ def unquote_text(text: str):
 def match_tracker(item_element):
     tracker1 = item_element.xpath(".//span[@class='result-item result-tracker']//li[@class='selected']/text()")
     tracker2 = item_element.xpath(".//span[@class='result-item result-tracker']//li[@class='selected last']/text()")
-    tracker3 = item_element.xpath(".//span[@class='result-item result-tracker']//li[@class='selected mediumTrack last']/text()")
+    tracker3 = item_element.xpath(
+        ".//span[@class='result-item result-tracker']//li[@class='selected mediumTrack last']/text()")
     trackers = [tracker1, tracker2, tracker3]
 
     if any(trackers):
         trackers = map(str, trackers)
-        tracker = "".join(trackers).replace('[', '').replace(']', '')
+        tracker = "".join(trackers).replace('[', '').replace(']', '').replace('\'', '')
     else:
         tracker = None
     return tracker
+
 
 def filter_text(text: str):
     res = text.replace('\\u2014', '')
@@ -82,6 +84,4 @@ def filter_text(text: str):
 
 
 def url_intput_orders():
-    # print("")
     pass
-
