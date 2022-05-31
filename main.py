@@ -61,16 +61,16 @@ def parse_all(html):
     #
     for item_element in item_elements:
         # try:
-            # 解析
-            item = parse_item(item_element)
-            res.append(item)
+        # 解析
+        item = parse_item(item_element)
+        res.append(item)
 
-            # 插入数据库
-            bill = Bill(**item)
-            bill.insert()
+        # 插入数据库
+        bill = Bill(**item)
+        bill.insert()
         # except Exception as e:
         #     logger.error(e)
-            pass
+        pass
     return res
 
 

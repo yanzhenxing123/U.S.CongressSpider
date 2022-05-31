@@ -1,5 +1,6 @@
 import yaml
 import utils
+
 base_path = utils.get_project_path()
 
 with open(base_path + "\\config\\config.yaml", encoding="utf-8") as file:
